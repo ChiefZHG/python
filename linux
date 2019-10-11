@@ -1,0 +1,466 @@
+linux基础练习
+
+解决问题的道路上，＂方法＂和＂坚持＂缺一不可。
+
+------------------------------------------------------------------------------------------
+
+#!/bin/bash
+window
+1> TCP/IP地址配置
+cmd—ifconfig/all
+2> 网络连通性测试
+kvm修改为private1–配置ip–关防火墙–ping
+
+一 linux:
+
+
+1 系统原理
+	1＞服务器包括：机架式，塔式，刀片式，机柜式
+	2＞主机与主机通信的三要素：ip地址（32个二进制，４个十进制）/ip路由/子网掩码
+		ip地址分类：一般计算机网络：a类1-127/b类128-191/c类192-223　组播和科研分别：d类224-239/e类240-254
+		子网掩码：a类地址255.0.0.0　b类地址255.255.0.0　c类地址255.255.255.0
+		网关：从一个网络连接到另一个网络的，通常是一台路由器或者防火墙/接入服务器
+	3>linux之父："哩呐科斯"
+	4＞内核作用：管理cpu/内存，驱动基本硬件，文件系统　　4.8.6：主版本.此版本.修订号
+2 手动安装一台LINUX虚拟机
+	新建虚拟(本地安装iso)---iso映像(cos7)---内存2048---磁盘30G--虚拟网路private1---cos---简体中文----安装位置(自动分区)---软件选择(带GUI服务器)---root密码---确认许可协议---汉语---位置(上海)---在线账号跳过---用户和密码---完成
+3 操作命令/选项/快捷键
+	1> 查看/Mac地址/内存/内核/版本
+	Mac:ifconfig---
+	内存:cat /proc/meminfo
+	内核:uname -r
+	版本:cat /etc/redhat-release
+	2> ls/cd/pwd/cat/tab/mkdir -p/mv/touch/cp -r/rm/ln/man/ps/grep -i-v/find/which/reboot/tree/df -h/du -h/mount(umount /mnt/dev)/rm -rf/gropadd/useradd　-u-d-s-G/date/tar/crontab -e-l-r/hwclock -s(恢复系统日期时间)/rht-vmctl/virsh/ssh/passwd/gpasswd -a-d/groupdel/head/tail/*/?/[a-z]/{axy,min,c}
+	3>　选项
+	4>　快捷键
+4 实际应用(思路+操作)
+(环境：rht-vmctl reset classroom/server/desktop）
+admin:
+	1) 为您的系统指定一个默认的软件仓库
+	2) 调整逻辑卷的大小
+	3) 创建用户帐户
+	4) 配置文件/var/tmp/fstab的权限
+	5) 配置一个 cron 任务
+	6) 创建一个共享目录
+	7) 安装内核的升级
+	8) 绑定到外部验证服务
+	9) autofs的配置
+	10) 配置NTP网络时间客户端
+	11) 配置一个用户帐户
+	12) 添加一个swap分区
+	13) 查找文件
+	14) 查找一个字符串
+	15) 创建一个逻辑卷
+	16) 创建一个归档
+engineer:
+	1) 配置SELINUX
+	2) 配置SSH访问
+	3) 自定义用户环境
+	4) 配置防火墙端口转发
+	5) 配置链路聚合
+	6) 配置IPv6地址
+	7) 配置本地邮件服务
+	8) 通过Samba发布共享目录
+	9) 配置多用户Samba挂载
+	10) 配置NFS共享服务
+	11) 挂载NFS共享
+	12) 实现一个Web服务
+	13) 配置安全Web服务
+	14) 配置虚拟主机
+	15) 配置Web内容访问
+	16) 实现动态Web内容
+	17) 创建一个脚本
+	18) 创建一个添加用户的脚本
+	19) 配置iSCSI服务端
+	20) 配置iSCSI客户端
+	21) 配置一个数据库
+	22) 数据库查询
+services:
+案例1：补充应用技巧
+	[root@svr7 ~]# chmod  700  /root/				
+	[root@svr7 ~]# sed -i '46c HISTSIZE = 200' /etc/profile 
+	[root@svr7 ~]# ls  -lh  /etc/inittab				//统计字节
+	[root@svr7 ~]# du  -sh /etc/inittab				//统计占用磁盘空间大小
+	[root@svr7 ~]# date  +"%F %R"
+	[root@svr7 ~]# touch  /opt/a.txt                        //新建文件a.txt
+	[root@svr7 ~]# mv  /opt/a.txt  /opt/b.txt               //将文件改名
+	[root@svr7 ~]# inotifywait  -mrq  /opt &                //开启监控
+	[root@svr7 ~]# kill  -9  %1				//结束inotifywait监控,杀死当前用户的第一个后台任务
+案例2：软连接与硬连接
+	软连接：缺点:指向原始文件的路径，若原始文件被删除，连接文件将失效；优点:原始文件可以是目录；原始文件与连接文件可以在不同的分区/文件系统
+	硬连接：优点:原始文件被删除，连接文件仍然有效；缺点:原始文件不能是目录；原始文件与连接文件必须在同一个分区/文件系统
+	[root@svr7 ~]# ln  -s  file1  file1-s		//软连接
+	[root@svr7 ~]# ln  file1  file1-h			//硬连接
+案例3：man手册、zip备份
+	[root@svr7 ~]# man  passwd
+	//制作：zip -r  包.zip  旧归档文件
+	//释放：unzip 包.zip -d  新建文件
+案例4：自定义yum软件仓库
+	[root@room9pc13 ~]# mkdir  /var/www/html/dvd
+	永久:
+	[root@room9pc13 ~]# echo /iso/CentOS7-1804.iso  /var/www/html/dvd  iso9660  loop,ro  0  0 >>  /etc/fstab
+	[root@room9pc13 ~]# mount  -a
+	临时:
+	[root@room9pc13 ~]# mount  /iso/CentOS7-1804.iso   /var/www/html/dvd
+	[root@room9pc13 ~]# yum  repolist
+案例5：发布及测试yum仓库
+	[root@room9pc13 ~]# yum  -y  install  httpd
+	[root@room9pc13 ~]# systemctl  restart  httpd 
+	[root@room9pc13 ~]# mv  /opt/libreoffice/  /var/www/html/
+	[root@pc207 ~]# vim  /etc/yum.repos.d/new.repo
+	[dvd]
+	name = CentOS Server
+	baseurl = http://192.168.4.254/dvd
+	gpgcheck = 0
+	[libreoffice]
+	name = LibreOffice 5
+	baseurl=http://192.168.4.254/libreoffice
+	gpgcheck = 0
+	[root@pc207 ~]# yum  repolist
+案例6：vim效率操作
+	命令模式常用操作：
+	1G 或 gg ，跳转到文件的首行
+	G ，跳转到文件的末尾行
+	yy、#yy ，复制光标处的一行、#行
+	p、P ，粘贴到光标处之后、之前
+	x 或 Delete键 ，删除光标处的单个字符
+	dd、#dd ，删除光标处的一行、#行
+	d^、d$ ，从光标处之前删除至行首/行尾
+	/word	向后查找字符串“word”，再按n/N跳至后/前一个结果
+	u ，撤销最近的一次操作
+	U ，撤销对当前行的所有修改
+	Ctrl + r	取消前一次撤销操作
+	ZZ	保存修改并退出
+	末行模式常用操作：
+	:s/old/new ，替换当前行第一个“old”
+	:s/old/new/g ，替换当前行所有的“old”
+	:n,m s/old/new/g ，替换第n-m行所有的“old”
+	:% s/old/new/g ，替换文件内所有的“old”
+	:w /root/newfile ，另存为其它文件
+	:r /etc/filesystems ，读入其他文件内容
+	:set nu|nonu ，显示/不显示行号
+	:set ai|noai ，启用/关闭自动缩进
+案例7：编译安装软件包
+	[root@svr7 ~]# yum -y install gcc
+	[root@svr7 ~]# tar  -xf  inotify-tools-3.13.tar.gz  -C /usr/src/
+	[root@svr7 ~]# cd  /usr/src/inotify-tools-3.13/ 
+	[root@svr7 inotify-tools-3.13]# ./configure
+	[root@svr7 inotify-tools-3.13]# make && make install
+	[root@svr7 ]# find  /usr/local/  -name  "inotify*"		//确认安装结果
+
+案例1：安装一个KVM服务器
+	虚拟化服务软件：
+	qemu-kvm为 kvm 提供底层仿真支持
+	libvirt-daemon为libvirtd 守护进程，管理虚拟机
+	libvirt-client为用户端软件，提供客户端管理命令
+	libvirt-daemon-driver-qemu为libvirtd 连接 qemu 的驱动
+	virt-manager为图形管理工具
+	步骤一：配置本地yum仓库
+	步骤二：安装KVM虚拟化
+	[root@kvmsvr ~]# yum -y install qemu-kvm libvirt-daemon  libvirt-client libvirt-daemon-driver-qemu  virt-manager
+	[root@kvmsvr ~]# systemctl  restart  libvirtd
+	[root@kvmsvr ~]# systemctl  enable  libvirtd
+案例2：KVM平台构建及简单管理
+	步骤一：使用KVM提供的virt-manager(虚拟系统管理器)图形化管理程序来操作(右上角新建)
+	步骤二：克隆虚拟机并验证(鼠标)
+	步骤三：删除指定的虚拟机(鼠标)
+案例3：virsh基本管理操作
+	[root@kvmsvr ~]# virsh  nodeinfo		//查看KVM服务器节点
+	[root@kvmsvr ~]# virsh  list  --all		//列出有哪些虚拟机（包括未开启的）及各自的状态
+	[root@kvmsvr ~]# virsh  dominfo  centos7.0	//查看指定虚拟机centos7.0的配置摘要信息
+	[root@kvmsvr ~]# virsh  start  centos7.0                              //开机
+	[root@kvmsvr ~]# virsh  shutdown  centos7.0                          //关机
+	[root@kvmsvr ~]# virsh  destroy  centos7.0                             //强制关机
+	[root@kvmsvr ~]# virsh  autostart  centos7.0                         //设置自启动
+	[root@kvmsvr ~]# virsh  autostart  --disable  centos7.0              //取消自启动
+	[root@kvmsvr ~]# virsh  edit  centos7.0			//修改导出后的配置（调整名称、UUID、磁盘路径、网卡MAC）
+	[root@kvmsvr ~]# virsh  undefine  centos7.0                      //取消定义虚拟机
+案例4：xml配置文件的应用
+	[root@kvmsvr ~]# uuidgen		//生成新的UUID字串，并复制备用
+	[root@kvmsvr ~]# virsh  edit  centos7.0	//修改导出后的配置（调整名称、UUID、磁盘路径、网卡MAC）
+"案例5：快建新虚拟机
+	快建新虚拟机的基本思路：
+	提前准备好一台模板虚拟机（镜像磁盘+xml配置文件）
+	基于qcow2磁盘复用技术快建新虚拟机的磁盘
+	通过调整模板机的配置快建新虚拟机的xml配置文件
+	导入新虚拟机
+	Copy On Write，写时复制技术原理：
+	直接映射原始盘的数据内容
+	当原始盘有修改时，在修改之前将旧数据存入前端盘
+	对前端盘的修改不会回写到原始盘
+	步骤一：准备模板虚拟机
+	找一台已经装好CentOS7系统、配置好本地yum源、关闭SELinux的虚拟机，提取模板虚拟机磁盘、xml配置文件备用
+	[root@kvmsvr ~]# qemu-img info  /data/images/centos7_muban.qcow2 	//准备磁盘目录、模板虚拟机磁盘文件
+	步骤二：快建虚拟机svr7
+	[root@kvmsvr ~]# qemu-img  create  -f  qcow2  -b  /data/images/centos7_muban.qcow2  /data/images/svr7.qcow2		//为虚拟机svr7快速建立前端盘（复用模板机的磁盘数据）
+	[root@kvmsvr ~]# cp  /data/images/centos7_muban.xml  /tmp/svr7.xml    //拷贝配置
+	[root@kvmsvr ~]# vim  /tmp/svr7.xml                             //修改配置
+	[root@room9pc00 ~]# virsh  define  /tmp/svr7.xml 		//定义新虚拟机svr7
+	步骤三：为虚拟机svr7配置主机名、IP地址;开启虚拟机svr7，使用root用户登入系统。"
+
+案例1：搭建单区域DNS服务器
+	步骤一：配置DNS服务器svr7
+	yum  -y  install  bind  bind-chroot
+	建立主配置文件 /etc/named.conf
+	sed -i '52s/./qq.cn/' /etc/named.conf
+	sed -i '53c type master;' /etc/named.conf
+	sed -i '54c file "qq.cn.zone";' /etc/named.conf
+	建立地址库文件 /var/named/qq.cn.zone
+	[root@svr7 ~]# cp  -p  named.localhost  tedu.cn.zone      //参考范本建地址库文件
+	[root@svr7 ~]# echo "@ NS svr7.qq.cn.  svr7 A 192.168.4.7  pc207 A 192.168.4.207  www A 192.168.4.100" >> /var/named/qq.cn.zone
+	[root@svr7 ~]# systemctl  restart  named 
+	步骤二：配置DNS客户机pc207
+	[root@pc207 ~]# echo "nameserver 192.168.4.7" >> /etc/resolv.conf 
+案例2：特殊DNS解析
+	DNS轮询：FQDN ---> IP地址1、IP地址2、.. ..
+	泛域名解析（站点名不确定）：多个FQDN ---> 一个IP地址
+	步骤一：配置DNS轮询
+	[root@svr7 ~]# echo "www A 192.168.4.100 www A 192.168.4.110 www A 192.168.4.120" >> /var/named/qq.cn.zone
+	[root@svr7 ~]# systemctl  restart  named
+	步骤二：配置多对一的泛域名解析
+	[root@svr7 ~]# echo "* A 119.75.217.56" >> /var/named/qq.cn.zone
+	[root@svr7 ~]# systemctl  restart  named
+案例3：配置DNS子域授权
+	步骤一：构建父DNS（tedu.cn）服务器
+	步骤二：构建子DNS（bj.tedu.cn）服务器
+	步骤三：在父DNS上配置子域授权
+	[root@svr7 ~]# echo "bj.tedu.cn. NS pc207.bj.tedu.cn.   pc207.bj.tedu.cn. A 192.168.4.207" >> /var/named/tedu.cn.zone
+	[root@svr7 ~]# systemctl  restart  named
+案例4：搭建并测试缓存DNS
+	权威/官方DNS服务器的特点：
+	至少管理一个DNS区域,，需要IANA等官方机构授权
+	典型应用：根域DNS、一级域DNS、二级域DNS、三级域DNS、.. ..
+	缓存DNS服务器的特点：
+	不需要管理任何DNS区域，但是能够替客户机查询，而且通过缓存、复用查询结果来加快响应速度
+	典型应用：ISP服务商、企业局域网
+	缓存DNS服务器的解析记录来源：
+	方式1：全局转发：将请求转发给指定的公共DNS（其他缓存DNS），请求递归服务
+	方式2：根域迭代：依次向根、一级、二级……域的DNS服务器迭代
+	步骤一：为虚拟机pc207提供上网条件
+	步骤二：将pc207配置为缓存DNS
+	[root@pc207 ~]# sed -i '12a forwarders  { 202.106.0.20; };' /etc/named.conf
+	[root@pc207 ~]# systemctl  restart  named
+
+案例1：配置并验证Split分离解析
+	在配置DNS服务器时，通过view视图设置来区分不同客户机、不同地址库
+	步骤一：配置Split分离解析
+	[root@svr7 ~]# cp  -p  named.localhost  tedu.cn.zone      //参考范本建地址库文件
+	[root@svr7 ~]# echo "@ NS svr7.qq.cn.  svr7 A 192.168.4.7  pc207 A 192.168.4.207  www A 192.168.4.100" >> /var/named/qq.cn.zone.lan
+	[root@svr7 ~]# echo "@ NS svr7.qq.cn.  svr7 A 192.168.4.7  pc207 A 192.168.4.207  www A 1.2.3.4" >> /var/named/qq.cn.zone.other
+	[root@svr7 ~]# vim  /etc/named.conf
+	options {
+        directory  "/var/named";
+	};
+	acl "mylan" {  									//名为mylan的列表
+        192.168.4.207; 192.168.7.0/24;
+	};
+	view "mylan" {
+    match-clients { mylan; };  					//检查客户机地址是否匹配此列表
+    zone "tedu.cn" IN {
+        type master;
+        file "tedu.cn.zone.lan";
+    };
+	};
+	view "other" {
+    match-clients { any; };  						//匹配任意客户机地址
+    zone "tedu.cn" IN {
+        type master;
+        file "tedu.cn.zone.other";
+    };
+	};
+	[root@svr7 ~]# systemctl  restart  named
+案例2：查看进程信息
+	ps aux、ps –elf：查看进程静态快照
+	top：查看进程动态排名
+	pstree：查看进程与进程之间的树型关系结构
+	pgrep：根据指定的名称或条件检索进程
+案例3：进程调度及终止
+	命令行 &：将命令行在后台运行
+	Ctrl + z 组合键：挂起当前进程（暂停并转入后台）
+	jobs：列出当前用户当前终端的后台任务
+	bg 编号：启动指定编号的后台任务
+	fg 编号：将指定编号的后台任务调入前台运行
+	kill [-9] PID...：杀死指定PID值的进程
+	kill [-9] %n：杀死第n个后台任务
+	killall [-9] 进程名...：杀死指定名称的所有进程
+	pkill：根据指定的名称或条件杀死进程
+案例4：系统日志分析
+	常见的系统日志及各自用途：
+	/var/log/messages，记录内核消息、各种服务的公共消息
+	/var/log/dmesg，记录系统启动过程的各种消息
+	/var/log/cron，记录与cron计划任务相关的消息
+	/var/log/maillog，记录邮件收发相关的消息
+	/var/log/secure，记录与访问限制相关的安全消息
+	日志消息的优先级（高-->低）：
+	EMERG（紧急）：级别0，系统不可用的情况
+	ALERT（警报）：级别1，必须马上采取措施的情况
+	CRIT（严重）：级别2，严重情形
+	ERR（错误）：级别3，出现错误
+	WARNING（警告）：级别4，值得警告的情形
+	NOTICE（注意）：级别5，普通但值得引起注意的事件
+	INFO（信息）：级别6，一般信息
+	DEBUG（调试）：级别7，程序/服务调试消息
+	RHEL7提供的journalctl日志工具的常见用法：
+	journalctl | grep 关键词
+	journalctl -u 服务名 -p 优先级
+	journalctl -n 消息条数
+	journalctl --since="yyyy-mm-dd HH:MM:SS" --until="yyyy-mm-dd HH:MM:SS"
+案例5：使用systemctl工具
+	[root@svr7 ~]# systemctl  restart  httpd  crond  bluetooth	//重启系统服务httpd、crond、bluetooth
+	[root@svr7 ~]# systemctl  status  httpd  crond  bluetooth	//查看上述服务的状态
+	[root@svr7 ~]# systemctl  stop  bluetooth		//停用bluetooth服务
+	[root@svr7 ~]# systemctl  disable  bluetooth	//禁止bluetooth服务开机自启
+	[root@svr7 ~]# systemctl  set-default  multi-user.target		//将默认运行级别设置为multi-user.target
+	[root@svr7 ~]# systemctl  get-default		//查看默认运行级别
+
+案例1：PXE装机
+	步骤一：搭建http服务
+	[root@room9pc13 ~]# yum  -y  install  httpd 
+	[root@room9pc13 ~]# systemctl  restart  httpd 
+	[root@room9pc13 ~]# mkdir  /var/www/html/dvd 
+	[root@room9pc13 ~]# echo "/ISO/CentOS-1804.iso  /var/www/html/dvd  iso9660  loop,ro  0  0" >> /etc/fstab
+	[root@room9pc13 ~]# mount  -a 
+	步骤二：搭建dhcp服务
+	[root@svr7 ~]# yum  -y  install  dhcp
+	[root@svr7 ~]# vim  /etc/dhcp/dhcpd.conf
+	subnet 192.168.4.0 netmask 255.255.255.0 {
+     range  192.168.4.10 192.168.4.200;
+     next-server  192.168.4.7;
+     filename  "pxelinux.0";}
+	[root@svr7 ~]# systemctl  restart  dhcpd
+	步骤三：搭建TFTP服务
+	[root@svr7 ~]# yum -y install tftp-server 
+	[root@svr7 ~]# systemctl  restart  tftp
+	[root@svr7 ~]# yum  -y  install  syslinux
+	[root@svr7 ~]# cp  /usr/share/syslinux/pxelinux.0  /var/lib/tftpboot/
+	[root@svr7 ~]# mkdir  /var/lib/tftpboot/pxelinux.cfg
+	[root@svr7 ~]# mount /dev/cdrom  /mnt
+	[root@svr7 ~]# cp  /mnt/isolinux/isolinux.cfg  /var/lib/tftpboot/pxelinux.cfg/default	//菜单文件
+	[root@svr7 ~]# cp  /mnt/isolinux/vesamenu.c32  /var/lib/tftpboot/	//图形模块
+	[root@svr7 ~]# cp  /mnt/isolinux/splash.png  　/var/lib/tftpboot/	//背景图片
+	[root@svr7 ~]# cp  /mnt/isolinux/vmlinuz  　　　/var/lib/tftpboot/	//启动内核
+	[root@svr7 ~]# cp  /mnt/isolinux/initrd.img  　/var/lib/tftpboot/	//驱动程序
+	[root@svr7 ~]# chmod +x /var/lib/tftpboot/pxelinux.cfg/default
+	[root@svr7 ~]# vim  /var/lib/tftpboot/pxelinux.cfg/default
+	default vesamenu.c32  							//默认交给图形模块处理
+	timeout 60  									//选择限时为60秒（单位1/10秒）
+	menu title  PXE  Installation  Server 			//启动菜单标题信息
+	label  linux  								//菜单项标签
+    menu  label  ^Install CentOS7 Linux 7
+    kernel  CentOS7/vmlinuz  					//内核的位置
+    append  initrd=CentOS7/initrd.img  inst.stage2=http://192.168.4.254/dvd 
+	 											//初始镜像、安装源位置
+	label rescue
+    menu label ^ CentOS7 system
+    kernel CentOS7/vmlinuz
+    append initrd=CentOS7/initrd.img inst.stage2=http://192.168.4.254/dvd rescue
+
+	label local 									//从硬盘启动
+    menu  default  							//默认启动方式
+    menu label Boot from ^local drive
+    localboot 0xffff
+    menu  end
+	步骤四：无人值守安装
+	[root@svr7 ~]# yum -y install system-config-kickstart
+	[root@svr7 ~]# system-config-kickstart
+	步骤五：应答文件
+	[root@svr7 ~]# vim /root/ks.cfg
+	[root@svr7 ~]# cp /root/ks.cfg /var/www/html
+	[root@svr7 ~]# vim  /etc/yum.repos.d/dvd.repo
+	[development]
+	name = CentOS Linux 7
+	baseurl = http://192.168.4.254/dvd
+	gpgcheck = 0
+	[root@svr7 ~]# vim /var/lib/tftpboot/pxelinux.cfg/default
+	label linux 
+	menu label install RHEL7
+	menu default
+	kernel vmlinuz
+	append initrd=initrd.img ks=http://192.168.4.7/ks.cfg
+
+案例1：rsync基本用法
+	本地同步操作：
+	rsync [选项...] 本地目录1 本地目录2
+	rsync [选项...] 本地目录1/ 本地目录2
+	rsync同步工具的常用选项：
+	-n：测试同步过程，不做实际修改
+	--delete：删除目标文件夹内多余的文档
+	-a：归档模式，相当于-rlptgoD
+	-v：显示详细操作信息
+	-z：传输过程中启用压缩/解压
+	[root@svr7 ~]# rsync  -a  /boot  /todir          //将目录1作为目录2的子目录
+案例2：rsync+SSH同步
+	[root@pc207 ~]# rsync  root@192.168.4.7:/   	//查看远程主机svr7的/目录下有哪些子目录
+	[root@pc207 ~]# rsync  -a  root@192.168.4.7:/boot/  /fromssh	//将远程主机svr7的/boot/目录同步为本地的/fromssh
+案例3：使用inotifywait工具
+	inotifywait监控操作：
+	inotifywait [选项] 目标文件夹
+	inotifywait常用命令选项：
+	-m，持续监控（捕获一个事件后不退出）
+	-r，递归监控、包括子目录及文件
+	-q，减少屏幕输出信息
+	-e，指定监视的 modify、move、create、delete、attrib 等事件类别
+	[root@svr7 ~]# tar  xf  inotify-tools-3.13.tar.gz
+	[root@svr7 ~]# cd  /usr/src/inotify-tools-3.13/
+	[root@svr7 inotify-tools-3.13]# ./configure
+	[root@svr7 inotify-tools-3.13]# make && make install
+	[root@svr7 ~]# inotifywait  -mrq  -e  create,modify,move,attrib,delete /opt &	//开启监控任务，置入后台
+	[root@svr7 ~]# kill  -9  %1		//停止监控任务
+案例4：配置Web镜像同步
+	[root@svr7 ~]# yum  -y  install  httpd
+	[root@svr7 ~]# vim  /root/isync.sh
+	#!/bin/bash
+	FROM_DIR="/var/www/html/"      
+	RSYNC_CMD="rsync  -az  --delete  $FROM_DIR  root@192.168.4.207:/var/www/html" 
+	while  inotifywait  -rqq  -e  modify,move,create,delete,attrib  $FROM_DIR 
+	do
+    $RSYNC_CMD
+	done  &
+	[root@svr7 ~]# chmod  +x  /root/isync.sh 
+	[root@svr7 ~]# /root/isync.sh
+	[root@svr7 ~]# touch  /var/www/html/a.txt
+	[root@svr7 ~]# pkill  -9  inotify	
+案例5：配置Cobbler装机平台
+	步骤一：设置防火墙与SELinux
+	[root@cob ~]# firewall-cmd --set-default-zone=trusted 
+	[root@cob ~]# setenforce 0
+	步骤二：搭建Yum仓库，安装Cobbler
+	[root@room9pc01 桌面]# scp -r /root/桌面/Cobbler/  root@192.168.4.123:/
+	[root@cob ~]# mount /dev/cdrom  /mnt/    
+		[root@cob ~]# rm -rf /etc/yum.repos.d/*
+	[root@cob ~]# vim /etc/yum.repos.d/dvd.repo
+	[CentOS7]
+	name=CentOS 7.4
+	baseurl=file:///mnt
+	enabled=1
+	gpgcheck=0
+	[root@cob ~]# yum repolist
+	[root@cob ~]# unzip /Cobbler/cobbler.zip 
+	[root@cob ~]# yum -y install /Cobbler/*.rpm
+	步骤三：配置cobbler
+	[root@cob ~]# vim /etc/cobbler/settings 
+	next_server: 192.168.4.123     #设置下一个服务器还为本机
+	server: 192.168.4.123           #设置本机为cobbler服务器
+	manage_dhcp: 1                  #设置cobbler管理dhcp服务
+	pxe_just_once: 1                #防止客户端重复安装操作系统,增加默认从本机硬盘启动菜单
+	[root@cob ~]# vim /etc/cobbler/dhcp.template
+	:%s /192.168.1/192.168.4/g          #将所有192.168.1替换为192.168.4
+	[root@cob ~]# tar -tf /root/Cobbler/cobbler_boot.tar.gz  #众多的引导文件
+	[root@cob ~]# tar -xPf /root/Cobbler/cobbler_boot.tar.gz 
+	步骤四：启动相关服务
+	[root@cob ~]# systemctl restart cobblerd
+	[root@cob ~]# systemctl restart httpd
+	[root@cob ~]# systemctl restart tftp
+	[root@cob ~]# systemctl restart rsyncd
+	[root@cob ~]# cobbler sync								//刷新配置
+	步骤五：导入光盘镜像
+	[root@cob ~]# cobbler import --path=/mnt --name=CentOS7 --arch=x86_64
+	[root@cob ~]# umount /mnt/
+	[root@cob ~]# mount /dev/cdrom  /mnt/ 
+	[root@cob ~]# cobbler import --path=/mnt --name=RedHat --arch=x86_64
+	步骤六：新建虚拟机测试
+	选择pxe安装方式,虚拟机网络类型选择为：private1 
+	(注意如果安装CentOS系统虚拟机内容必须为2G以上，安装RedHat内存1G以上，硬盘均在9G以上)
+————————————————
+版权声明：本文为CSDN博主「ChiefZHG」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/weixin_45372014/article/details/102502902
